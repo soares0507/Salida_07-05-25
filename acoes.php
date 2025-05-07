@@ -30,6 +30,16 @@
             exit();
         }
 
+          // Verifica na tabela porteiro
+        $sqlResponsavel = "SELECT * FROM portaria WHERE cpf = '$cpf' AND senha = '$senha'";
+        $resultResponsavel = mysqli_query($conexao, $sqlResponsavel);
+        if (mysqli_num_rows($resultResponsavel) > 0) {
+            $_SESSION['tipo'] = 'portaria';
+            $_SESSION['cpf'] = $cpf;
+            header('Location: porteiro.php'); // Redireciona para o painel do porteiro
+            exit();
+        }
+
         // Caso as credenciais estejam incorretas
         $_SESSION['login_erro'] = "Credenciais inválidas. Verifique seu CPF e senha.";
         header('Location: login.php'); // Redireciona para a página de login
@@ -89,5 +99,46 @@
             $_SESSION['cadastro_erro'] = "Prencha Todos os Campos!!";
             header('Location: cadastro.php');
         }
+    }
+
+          // Registrar saída
+    if (isset($_POST['registrar_saida'])) {
+        $id_requisicao = mysqli_real_escape_string($conexao, $_POST['id_requisicao']);
+        $sql_check = "SELECT data_saida FROM requisicao WHERE id = '$id_requisicao'";
+        $result_check = mysqli_query($conexao, $sql_check);
+        $row = mysqli_fetch_assoc($result_check);
+
+        if ($row['data_saida'] === null) {
+            $data_saida = (new DateTime('now', new DateTimeZone('America/Sao_Paulo')))->format('Y-m-d H:i:s');
+            $sql = "UPDATE requisicao SET data_saida = '$data_saida' WHERE id = '$id_requisicao'";
+            mysqli_query($conexao, $sql);
+        }
+        header('Location: porteiro.php');
+        exit();
+    }
+
+    // Registrar retorno
+    if (isset($_POST['registrar_retorno'])) {
+        $id_requisicao = mysqli_real_escape_string($conexao, $_POST['id_requisicao']);
+        $sql_check = "SELECT data_retorno FROM requisicao WHERE id = '$id_requisicao'";
+        $result_check = mysqli_query($conexao, $sql_check);
+        $row = mysqli_fetch_assoc($result_check);
+
+        if ($row['data_retorno'] === null) {
+            $data_retorno = (new DateTime('now', new DateTimeZone('America/Sao_Paulo')))->format('Y-m-d H:i:s');
+            $sql = "UPDATE requisicao SET data_retorno = '$data_retorno', estado = 'concluido' WHERE id = '$id_requisicao'";
+            mysqli_query($conexao, $sql);
+        }
+        header('Location: porteiro.php');
+        exit();
+    }
+
+    // Não vai retornar
+    if (isset($_POST['nao_vai_retornar'])) {
+        $id_requisicao = mysqli_real_escape_string($conexao, $_POST['id_requisicao']);
+        $sql = "UPDATE requisicao SET estado = 'concluido' WHERE id = '$id_requisicao'";
+        mysqli_query($conexao, $sql);
+        header('Location: porteiro.php');
+        exit();
     }
 ?>
